@@ -30,149 +30,223 @@ def check_no_list_methods(function):
         if name in [".append", ".pop", ".insert", ".remove", ".extend", ".clear"]:
             pytest.fail(
                 function.__name__ + "() uses " + name + "(). "
-                "Move the pointers yourself and store with Queue[TailPointer] = ..."
+                "Move the pointers yourself and store with Queue[pointer] = ..."
             )
 
 
-def empty_the_queue(q):
-    items = []
-    for x in range(q.NumberItems):
-        items.append(q.Dequeue())
-    return items
-
-
 def test1_initial_queue(q):
-    assert q.Queue == [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
-    assert q.HeadPointer == -1
-    assert q.TailPointer == -1
-    assert q.NumberItems == 0
+    assert q.LinearQueue == ["", "", "", "", "", "", "", ""]
+    assert q.LinearHead == -1
+    assert q.LinearTail == -1
 
 
 def test1_enqueue(q):
-    assert q.Enqueue(15) == True
-    assert q.HeadPointer == 0
-    assert q.TailPointer == 0
-    assert q.NumberItems == 1
-    assert q.Queue[0] == 15
-    assert q.Enqueue(27) == True
-    assert q.TailPointer == 1
-    assert q.NumberItems == 2
+    assert q.LinearEnqueue("Bat") == True
+    assert q.LinearHead == 0
+    assert q.LinearTail == 0
+    assert q.LinearQueue[0] == "Bat"
+    assert q.LinearEnqueue("Saraa") == True
+    assert q.LinearHead == 0
+    assert q.LinearTail == 1
+    assert q.LinearQueue[1] == "Saraa"
 
 
 def test1_enqueue_when_full(q):
-    for x in range(10):
-        assert q.Enqueue(x) == True
-    assert q.Enqueue(99) == False
-    assert q.NumberItems == 10
-    assert q.Queue == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    for name in ["A", "B", "C", "D", "E", "F", "G", "H"]:
+        assert q.LinearEnqueue(name) == True
+    assert q.LinearEnqueue("I") == False
+    assert q.LinearTail == 7
+    assert q.LinearQueue == ["A", "B", "C", "D", "E", "F", "G", "H"]
 
 
 def test1_dequeue(q):
-    q.Enqueue(10)
-    q.Enqueue(20)
-    q.Enqueue(30)
-    assert q.Dequeue() == 10
-    assert q.HeadPointer == 1
-    assert q.NumberItems == 2
-    assert q.Dequeue() == 20
-    assert q.Dequeue() == 30
+    q.LinearEnqueue("Bat")
+    q.LinearEnqueue("Saraa")
+    q.LinearEnqueue("Anu")
+    assert q.LinearDequeue() == "Bat"
+    assert q.LinearHead == 1
+    assert q.LinearDequeue() == "Saraa"
+    assert q.LinearDequeue() == "Anu"
 
 
 def test1_dequeue_when_empty(q):
-    assert q.Dequeue() == -999
-    q.Enqueue(-1)
-    assert q.Dequeue() == -1
-    assert q.NumberItems == 0
-    assert q.HeadPointer == -1
-    assert q.TailPointer == -1
-    assert q.Dequeue() == -999
+    assert q.LinearDequeue() == ""
+    q.LinearEnqueue("Bat")
+    q.LinearDequeue()
+    assert q.LinearDequeue() == ""
 
 
-def test1_wraps_around(q):
-    for x in range(10):
-        q.Enqueue(x)
-    q.Dequeue()
-    q.Dequeue()
-    q.Dequeue()
-    assert q.Enqueue(10) == True
-    assert q.TailPointer == 0
-    assert q.Queue[0] == 10
-    assert q.Enqueue(11) == True
-    assert q.Enqueue(12) == True
-    assert q.TailPointer == 2
-    assert q.Enqueue(13) == False
-    assert empty_the_queue(q) == [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+def test1_count(q):
+    assert q.LinearCount() == 0
+    q.LinearEnqueue("A")
+    q.LinearEnqueue("B")
+    q.LinearEnqueue("C")
+    assert q.LinearCount() == 3
+    q.LinearDequeue()
+    assert q.LinearCount() == 2
+    q.LinearDequeue()
+    q.LinearDequeue()
+    assert q.LinearCount() == 0
+    assert q.LinearDequeue() == ""
+    assert q.LinearCount() == 0
 
 
 def test1_uses_pointers(q):
-    check_no_list_methods(q.Enqueue)
-    check_no_list_methods(q.Dequeue)
-    for x in range(25):
-        q.Enqueue(x)
-        q.Dequeue()
-    assert len(q.Queue) == 10
+    check_no_list_methods(q.LinearEnqueue)
+    check_no_list_methods(q.LinearDequeue)
+    for x in range(10):
+        q.LinearEnqueue("P" + str(x))
+    for x in range(10):
+        q.LinearDequeue()
+    assert len(q.LinearQueue) == 8
+    assert q.LinearTail == 7
 
 
-@pytest.mark.parametrize("content, expected_count, expected_items", [
-    ["5\n10\n15\n", 3, [5, 10, 15]],
-    ["7\n\n-3\n\n", 2, [7, -3]],
-    ["42", 1, [42]],
-    ["", 0, []],
-])
-def test2_load_queue(q, tmp_path, content, expected_count, expected_items):
-    path = tmp_path / "numbers.txt"
-    path.write_text(content)
-    assert q.LoadQueue(path) == expected_count
-    assert q.NumberItems == expected_count
-    assert empty_the_queue(q) == expected_items
-
-
-def test2_load_when_full(q, tmp_path, capsys):
-    path = tmp_path / "numbers.txt"
-    path.write_text("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n")
-    assert q.LoadQueue(path) == 10
-    assert capsys.readouterr().out.count("Queue full") == 1
-    assert empty_the_queue(q) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-
-def test2_adds_to_back(q, tmp_path):
-    q.Enqueue(100)
-    path = tmp_path / "numbers.txt"
-    path.write_text("1\n2\n3\n")
-    assert q.LoadQueue(path) == 3
-    assert empty_the_queue(q) == [100, 1, 2, 3]
-
-
-@pytest.mark.parametrize("items, expected_removed, expected_items", [
-    [[5, -2, 7, -1, 3], 2, [5, 7, 3]],
-    [[1, 2, 3], 0, [1, 2, 3]],
-    [[-5, 0, -6], 2, [0]],
-    [[], 0, []],
-])
-def test3_remove_negatives(q, items, expected_removed, expected_items):
-    for item in items:
-        q.Enqueue(item)
-    assert q.RemoveNegatives() == expected_removed
-    assert q.NumberItems == len(expected_items)
-    assert empty_the_queue(q) == expected_items
-
-
-def test3_after_wrap_around(q):
-    for x in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-        q.Enqueue(x)
-    for x in range(6):
-        q.Dequeue()
-    for x in [-11, 12, -13, 14]:
-        q.Enqueue(x)
-    assert q.RemoveNegatives() == 2
-    assert empty_the_queue(q) == [7, 8, 9, 10, 12, 14]
-
-
-def test3_all_negative(q):
-    for x in [-1, -2, -3]:
-        q.Enqueue(x)
-    assert q.RemoveNegatives() == 3
+def test2_initial_queue(q):
+    assert q.CircularQueue == ["", "", "", "", ""]
+    assert q.CircularHead == -1
+    assert q.CircularTail == -1
     assert q.NumberItems == 0
-    assert q.HeadPointer == -1
-    assert q.TailPointer == -1
-    assert q.Dequeue() == -999
+
+
+def test2_enqueue_and_dequeue(q):
+    assert q.CircularEnqueue("Bat") == True
+    assert q.CircularHead == 0
+    assert q.CircularTail == 0
+    assert q.NumberItems == 1
+    assert q.CircularEnqueue("Saraa") == True
+    assert q.CircularEnqueue("Anu") == True
+    assert q.NumberItems == 3
+    assert q.CircularDequeue() == "Bat"
+    assert q.CircularHead == 1
+    assert q.NumberItems == 2
+    assert q.CircularDequeue() == "Saraa"
+
+
+def test2_wraps_around(q):
+    for name in ["A", "B", "C", "D", "E"]:
+        assert q.CircularEnqueue(name) == True
+    assert q.CircularEnqueue("X") == False
+    assert q.CircularDequeue() == "A"
+    assert q.CircularDequeue() == "B"
+    assert q.CircularEnqueue("F") == True
+    assert q.CircularTail == 0
+    assert q.CircularQueue[0] == "F"
+    assert q.CircularEnqueue("G") == True
+    assert q.CircularTail == 1
+    assert q.CircularEnqueue("H") == False
+    result = []
+    for x in range(5):
+        result.append(q.CircularDequeue())
+    assert result == ["C", "D", "E", "F", "G"]
+
+
+def test2_empty_resets_pointers(q):
+    assert q.CircularDequeue() == ""
+    q.CircularEnqueue("Bat")
+    q.CircularEnqueue("Saraa")
+    q.CircularDequeue()
+    q.CircularDequeue()
+    assert q.NumberItems == 0
+    assert q.CircularHead == -1
+    assert q.CircularTail == -1
+    assert q.CircularDequeue() == ""
+
+
+def test2_get_item(q):
+    assert q.GetItem(0) == ""
+    q.CircularEnqueue("Bat")
+    q.CircularEnqueue("Saraa")
+    q.CircularEnqueue("Anu")
+    assert q.GetItem(0) == "Bat"
+    assert q.GetItem(1) == "Saraa"
+    assert q.GetItem(2) == "Anu"
+    assert q.GetItem(3) == ""
+    assert q.GetItem(-1) == ""
+    assert q.NumberItems == 3
+    assert q.CircularHead == 0
+
+
+def test2_get_item_after_wrap(q):
+    for name in ["A", "B", "C", "D", "E"]:
+        q.CircularEnqueue(name)
+    q.CircularDequeue()
+    q.CircularDequeue()
+    q.CircularDequeue()
+    q.CircularEnqueue("F")
+    q.CircularEnqueue("G")
+    assert q.GetItem(0) == "D"
+    assert q.GetItem(1) == "E"
+    assert q.GetItem(2) == "F"
+    assert q.GetItem(3) == "G"
+    assert q.GetItem(4) == ""
+    assert q.CircularDequeue() == "D"
+
+
+def test2_uses_pointers(q):
+    check_no_list_methods(q.CircularEnqueue)
+    check_no_list_methods(q.CircularDequeue)
+    for x in range(20):
+        q.CircularEnqueue("P" + str(x))
+        q.CircularDequeue()
+    assert len(q.CircularQueue) == 5
+    assert q.NumberItems == 0
+
+
+def test3_arrive(q):
+    for name in ["A", "B", "C", "D", "E"]:
+        assert q.Arrive(name) == "inside"
+    assert q.Arrive("F") == "outside"
+    assert q.Arrive("G") == "outside"
+    assert q.NumberItems == 5
+    assert q.LinearCount() == 2
+
+
+def test3_serve_order(q):
+    for name in ["A", "B", "C", "D", "E", "F", "G"]:
+        q.Arrive(name)
+    assert q.Serve() == "A"
+    assert q.NumberItems == 5
+    assert q.LinearCount() == 1
+    assert q.CircularQueue[q.CircularTail] == "F"
+    assert q.Serve() == "B"
+    assert q.LinearCount() == 0
+    served = []
+    for x in range(5):
+        served.append(q.Serve())
+    assert served == ["C", "D", "E", "F", "G"]
+    assert q.NumberItems == 0
+
+
+def test3_serve_when_empty(q):
+    assert q.Serve() == ""
+    q.Arrive("A")
+    assert q.Serve() == "A"
+    assert q.Serve() == ""
+
+
+def test3_outside_line_is_linear(q):
+    for x in range(13):
+        assert q.Arrive("P" + str(x)) in ["inside", "outside"]
+    assert q.Arrive("P13") == "full"
+    for x in range(8):
+        q.Serve()
+    assert q.NumberItems == 5
+    assert q.LinearCount() == 0
+    for x in range(5):
+        q.Serve()
+    assert q.Arrive("Late1") == "inside"
+    for x in range(4):
+        q.Arrive("Late" + str(x + 2))
+    assert q.Arrive("Late6") == "full"
+
+
+def test3_uses_both_queues(q):
+    arrive_calls = calls_in(q.Arrive)
+    serve_calls = calls_in(q.Serve)
+    assert "CircularEnqueue" in arrive_calls, "Arrive() must call CircularEnqueue()."
+    assert "LinearEnqueue" in arrive_calls, "Arrive() must call LinearEnqueue()."
+    assert "CircularDequeue" in serve_calls, "Serve() must call CircularDequeue()."
+    assert "LinearDequeue" in serve_calls, "Serve() must call LinearDequeue()."
+    q.Arrive("A")
+    assert q.Serve() == "A"
