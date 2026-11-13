@@ -1,66 +1,72 @@
-# Python Queue 2
+# ADT 5 — Linear and Circular Queues
 
 Read the Abstract Data Types lecture (Queue section) before you start.
 https://drive.google.com/file/d/1jXGQdSvuUYjGXl-PUuHMUzKWEBGQoARL/view?usp=sharing
 
-**Rules for this assignment**
 
-- Do **not** use `.append()` or `.pop()` inside `Enqueue()` and `Dequeue()`.
-  Move the pointers yourself and store with `Queue[TailPointer] = ...`. The tests check for this.
-- Functions **return** their answer. Only print when the exercise says so.
-- Use `global Queue, HeadPointer, TailPointer, NumberItems` in every function that changes them.
+**The scenario**
+
+A small bank has room for **5 customers inside**. Everyone else waits in a
+line **outside**.
+
+    OUTSIDE (linear queue, 8 places)        INSIDE (circular queue, 5 places)
+    ┌───┬───┬───┬───┬───┬───┬───┬───┐       ┌───┬───┬───┬───┬───┐
+    │ F │ G │   │   │   │   │   │   │  ──►  │ A │ B │ C │ D │ E │  ──► served
+    └───┴───┴───┴───┴───┴───┴───┴───┘       └───┴───┴───┴───┴───┘
+
+---
 
 ## Exercise 1
 
 **Problem:**
 
-Build a **circular queue** of integers.
+Build the **linear queue** for the line outside.
 
 Set up the queue:
 
-- `Queue` → a global array of **10** elements, all set to `-1`
-- `HeadPointer` and `TailPointer` → global integers, both set to `-1`
-- `NumberItems` → a global integer, set to `0`
+- `LinearQueue` → a global array of **8** elements, all set to `""` (empty string)
+- `LinearHead` and `LinearTail` → global integers, both set to `-1`
 
-Then write two functions:
+Then write three functions:
 
-`Enqueue(Data)`
+`LinearEnqueue(Name)`
 
-- If the queue is full (`NumberItems` is 10), return `False`
-- If the queue is empty, set `HeadPointer` and `TailPointer` to 0
-- Otherwise add 1 to `TailPointer` — and if it reaches **10**, set it back to **0**
-- Store `Data` at `Queue[TailPointer]`, add 1 to `NumberItems`, and return `True`
+- If the queue is full (`LinearTail` is 7), return `False`
+- Otherwise add 1 to `LinearTail`, store `Name` at `LinearQueue[LinearTail]`,
+  and return `True`
+- If this is the **first** item ever (`LinearHead` is -1), set `LinearHead` to 0
 
-`Dequeue()`
+`LinearDequeue()`
 
-- If the queue is empty (`NumberItems` is 0), return **`-999`**
-- Otherwise read the item at `Queue[HeadPointer]`
-- Add 1 to `HeadPointer` — and if it reaches **10**, set it back to **0**
-- Take 1 off `NumberItems`
-- If the queue is now empty, set `HeadPointer` and `TailPointer` back to `-1`
-- Return the item
+- If the queue is empty (`LinearHead` is -1, or `LinearHead` is more than
+  `LinearTail`), return `""`
+- Otherwise return the name at `LinearQueue[LinearHead]`, and add 1 to `LinearHead`
 
-**Why -999 and not -1?** This queue can hold negative numbers, so `-1` could be
-a real item. The rogue value must be something that can never be real data.
+`LinearCount()`
+
+- Return how many names are waiting in the queue, using **only** `LinearHead`
+  and `LinearTail`
+- Return `0` if nothing was ever added
 
 **Example:**
 
     Input:
-      Enqueue(10)
-      Enqueue(20)
-      Enqueue(30)
-      print(Dequeue())
-      print(Dequeue())
-      print(NumberItems, HeadPointer, TailPointer)
-      print(Dequeue())
-      print(Dequeue())
+      LinearEnqueue("Bat")
+      LinearEnqueue("Saraa")
+      LinearEnqueue("Anu")
+      print(LinearCount())
+      print(LinearDequeue())
+      print(LinearCount())
+      print(LinearHead, LinearTail)
 
     Output:
-      10
-      20
-      1 2 2
-      30
-      -999
+      3
+      Bat
+      2
+      1 2
+
+*Hint:* if `LinearHead` is 1 and `LinearTail` is 2, the items are at index 1
+and index 2 — that is **2** items, not 1. Check your sum with the example.
 
 ---
 
@@ -68,41 +74,68 @@ a real item. The rogue value must be something that can never be real data.
 
 **Problem:**
 
-`LoadQueue(Filename)`
+Build the **circular queue** for the people inside.
 
-The file has one whole number on each line. Read the file and **enqueue** each
-number, as an **integer**, at the back of the queue. Skip any blank lines.
+Set up the queue:
 
-- If `Enqueue()` returns `False`, print `Queue full` **once** and stop.
-- Return how many numbers were added.
-- Do **not** empty the queue first — the numbers go after anything already in it.
+- `CircularQueue` → a global array of **5** elements, all set to `""`
+- `CircularHead` and `CircularTail` → global integers, both set to `-1`
+- `NumberItems` → a global integer, set to `0`
+
+Then write three functions:
+
+`CircularEnqueue(Name)`
+
+- If the queue is full (`NumberItems` is 5), return `False`
+- If the queue is empty, set `CircularHead` and `CircularTail` to 0
+- Otherwise add 1 to `CircularTail` — and if it reaches **5**, set it back to **0**
+- Store `Name` at `CircularQueue[CircularTail]`, add 1 to `NumberItems`, return `True`
+
+`CircularDequeue()`
+
+- If the queue is empty (`NumberItems` is 0), return `""`
+- Otherwise read the name at `CircularQueue[CircularHead]`
+- Add 1 to `CircularHead` — and if it reaches **5**, set it back to **0**
+- Take 1 off `NumberItems`
+- If the queue is now empty, set `CircularHead` and `CircularTail` back to `-1`
+- Return the name
+
+`GetItem(Position)`
+
+- Return the name at `Position` places from the **front** of the queue
+  (`Position` 0 is the front)
+- If there is no item at that position, return `""`
+- Do **not** change the queue
 
 **Example:**
 
-    Example File Content (numbers.txt):
-        5
-        10
-        15
+    Input:
+      Enqueue A, B, C, D, E
+      CircularDequeue()
+      CircularDequeue()
+      CircularDequeue()
+      CircularEnqueue("F")
+      CircularEnqueue("G")
+      print(CircularHead, CircularTail)
+      print(GetItem(0), GetItem(2), GetItem(3))
+      print(GetItem(4))
 
-    Example Input:
-        print(LoadQueue("numbers.txt"))
-        print(Dequeue())
+    Output:
+      3 1
+      D F G
+      ""
 
-    Program Output:
-        3
-        5
+What the array looks like:
 
-    Example File Content (numbers.txt):
-        1
-        2
-        ...
-        12
+    index:           0    1    2    3    4
+    CircularQueue: [ F    G    C    D    E ]
+                         ↑              ↑
+                    CircularTail   CircularHead
 
-    Program Output:
-        Queue full
-        10
+    Queue order:  D (pos 0)   E (pos 1)   F (pos 2)   G (pos 3)
 
-Only the first 10 numbers fit.
+*Hint:* the item at `Position` is at index `CircularHead + Position` — but
+if that goes past the end of the array, it must wrap back to the start.
 
 ---
 
@@ -110,34 +143,50 @@ Only the first 10 numbers fit.
 
 **Problem:**
 
-`RemoveNegatives()`
+Use **both** queues to run the bank.
 
-Remove every **negative** number from the queue, but keep the other numbers
-in the **same order**. Return how many numbers were removed.
+`Arrive(Name)`
 
-Use only `Enqueue()` and `Dequeue()`:
+- If there is space **inside**, add the customer to the circular queue and
+  return `"inside"`
+- Otherwise add them to the line **outside** (the linear queue) and return `"outside"`
+- If the line outside is also full, return `"full"`
 
-1. Store how many items are in the queue **before** you start.
-2. Repeat that many times:
-    - Dequeue the item at the front.
-    - If it is **not** negative, enqueue it again at the back.
+`Serve()`
 
-`0` is not negative — keep it.
+- Remove the customer at the **front** of the circular queue — they are served
+- If the inside was empty, return `""`
+- If anyone is waiting **outside**, move the person at the front of the line
+  outside **into** the circular queue
+- Return the name of the customer who was served
+
+Use your functions from Exercises 1 and 2 — `Arrive` and `Serve` must call
+the Enqueue and Dequeue functions of **both** queues.
 
 **Example:**
 
-    Queue before (front → back):   5  -2  7  -1  3
-
     Input:
-      print(RemoveNegatives())
+      for Name in ["A", "B", "C", "D", "E", "F", "G"]:
+          print(Name, Arrive(Name))
+      print(Serve())
+      print(LinearCount())
 
     Output:
-      2
+      A inside
+      B inside
+      C inside
+      D inside
+      E inside
+      F outside
+      G outside
+      A
+      1
 
-    Queue after (front → back):    5  7  3
+After `A` is served, `F` moves inside. Customers are always served in the
+order they arrived: A, B, C, D, E, F, G.
 
-*Hint:* why store the count first? `NumberItems` changes while you are
-dequeuing and enqueuing. If your loop checks `NumberItems` every time, it
-will stop at the wrong moment.
+**Think about it:** the line outside is a **linear** queue. After 8 people in
+total have waited outside, `Arrive()` returns `"full"` when the bank is full —
+even if nobody is waiting outside any more. Why? What would fix it?
 
 ---
